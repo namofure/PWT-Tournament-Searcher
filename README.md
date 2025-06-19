@@ -1,1 +1,1 @@
-# PWT-Tournament-Searcher
+# PWT Tournament Searcher
