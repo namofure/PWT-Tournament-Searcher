@@ -13,27 +13,29 @@ namespace PWT_RNG
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("======================================");
-            Console.Write("PWT Tournament Searcher\n");
-            Console.Write("Initial SEED : 0x");   // 初期SEED入力
-
-            if (uint.TryParse(Console.ReadLine(), System.Globalization.NumberStyles.HexNumber, null, out uint Seed))
+            do
             {
-                string outputPath = $"TournamentList.txt";
-                string excludePath = "出禁リスト.txt";
+                Console.WriteLine("\n======================================");
+                Console.Write("PWT Tournament Searcher\n");
+                Console.Write("Initial SEED : 0x");   // 初期SEED入力
 
-                List<string> ExcludeList = new();
-                if (File.Exists(excludePath))
+                if (uint.TryParse(Console.ReadLine(), System.Globalization.NumberStyles.HexNumber, null, out uint Seed))
                 {
-                    ExcludeList = File.ReadAllLines(excludePath)
-                        .Select(line => line.Trim())
-                        .Where(line => !string.IsNullOrWhiteSpace(line))
-                        .ToList();
-                }
-                else
-                {
-                    File.WriteAllText(excludePath, "");
-                }
+                    string outputPath = $"TournamentList.txt";
+                    string excludePath = "出禁リスト.txt";
+
+                    List<string> ExcludeList = new();
+                    if (File.Exists(excludePath))
+                    {
+                        ExcludeList = File.ReadAllLines(excludePath)
+                            .Select(line => line.Trim())
+                            .Where(line => !string.IsNullOrWhiteSpace(line))
+                            .ToList();
+                    }
+                    else
+                    {
+                        File.WriteAllText(excludePath, "");
+                    }
 
                     using (StreamWriter writer = new(outputPath))
                     {
@@ -41,7 +43,7 @@ namespace PWT_RNG
                         writer.WriteLine($"Initial Seed：0x{Seed:X8}");
                         writer.WriteLine("");
 
-                        for (uint count = 1; count < 623; count++)
+                        for (uint count = 1; count < 622; count++)
                         {
                             var PWT = new PWTSeed(Seed, count);
                             ulong PWTSeed = PWT.PWTRNG();
@@ -69,7 +71,6 @@ namespace PWT_RNG
 
                                     RawTrainerIndex--;
                                 }
-
                                 if (TrainerIDs.Contains(TrainerIndex))
                                 {
                                     TrainerIndex++;   //例外処理？
@@ -218,10 +219,10 @@ namespace PWT_RNG
                             writer.WriteLine("");
                         }
                         Console.WriteLine("======================================");
-                        Console.ReadKey();
-                    } 
+                    }
                 }
-                    
+
+            }while (Console.ReadKey().Key == ConsoleKey.R);
         }
         
         static ulong NextSeed(ulong PWTSeed)
