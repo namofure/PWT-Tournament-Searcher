@@ -54,10 +54,9 @@ namespace PWT_RNG
             uint val1, val2, val3;
             uint temp1, temp2, temp3, temp4, temp5, temp6;
             ulong PWT, PWT1, PWT2, PWTtemp;
-            uint temp = Seed;
 
-            val1 = stateVector[Count];
-            val2 = stateVector[Count + 1];
+            val1 = stateVector[Count + 1];
+            val2 = stateVector[Count + 2];
 
             temp1 = (val1 >> 0xB) ^ val1;
             temp2 = ((temp1 << 0x7) & 0x9D2C5680) ^ temp1;
