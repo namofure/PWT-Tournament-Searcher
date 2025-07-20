@@ -57,10 +57,9 @@ namespace PWT_RNG
                     for (int n = 0; n < PID.Count; n++)     //初期SEED
                     {
                         InSeedData SeedData = PID.GenSeed();
-                        ulong Seed = SeedData.Seed;
-                        ulong Temp = Seed;
+                        uint Seed = (uint)(SeedData.Seed / 0x100000000)  ;
 
-                        for (ulong count = 1; count < PID.Offset; count++)      //MT
+                        for (uint count = 1; count < PID.Offset; count++)      //MT
                         {
                             if (CountFlag == 100)
                             {

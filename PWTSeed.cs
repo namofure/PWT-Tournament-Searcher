@@ -8,16 +8,16 @@ namespace PWT_RNG
 {
     internal class PWTSeed
     {
-        private ulong Seed;
-        private ulong Count;
-        ulong[] stateVector = new ulong[624];
+        private uint Seed;
+        private uint Count;
+        uint[] stateVector = new uint[624];
         protected const int N = 624;
         protected const int M = 397;
-        protected const ulong MATRIX_A = 0x9908b0df;
-        protected const ulong UPPER_MASK = 0x80000000;
-        protected const ulong LOWER_MASK = 0x7fffffff;
+        protected const uint MATRIX_A = 0x9908b0df;
+        protected const uint UPPER_MASK = 0x80000000;
+        protected const uint LOWER_MASK = 0x7fffffff;
 
-        public PWTSeed(ulong Seed, ulong Count)
+        public PWTSeed(uint Seed, uint Count)
         {
             this.Seed = Seed;
             this.Count = Count;
@@ -50,8 +50,8 @@ namespace PWT_RNG
         }
         public ulong PWTRNG()
         {
-            ulong val1, val2, val3;
-            ulong temp1, temp2, temp3, temp4, temp5, temp6;
+            uint val1, val2, val3;
+            uint temp1, temp2, temp3, temp4, temp5, temp6;
             ulong PWT, PWT1, PWT2, PWTtemp;
 
             val1 = stateVector[Count + 1];
@@ -69,6 +69,7 @@ namespace PWT_RNG
 
             PWT = (PWT1 << 0x20) + PWT2;    //PWT乱数(仮)
             return PWT;
+
         }
     } 
 }
