@@ -1,4 +1,4 @@
-﻿using PWT_RNG;
+﻿using static PWT_RNG.PID;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection.Metadata.Ecma335;
 
 namespace PWT_RNG
 {
@@ -17,34 +18,56 @@ namespace PWT_RNG
             {
                 Console.WriteLine("\n======================================");
                 Console.Write("PWT Tournament Searcher\n");
-                Console.Write("Initial SEED : 0x");   // 初期SEED入力
 
-                if (uint.TryParse(Console.ReadLine(), System.Globalization.NumberStyles.HexNumber, null, out uint Seed))
-                {
                     string outputPath = $"TournamentList.txt";
                     string excludePath = "出禁リスト.txt";
 
-                    List<string> ExcludeList = new();
-                    if (File.Exists(excludePath))
-                    {
-                        ExcludeList = File.ReadAllLines(excludePath)
-                            .Select(line => line.Trim())
-                            .Where(line => !string.IsNullOrWhiteSpace(line))
-                            .ToList();
-                    }
-                    else
-                    {
-                        File.WriteAllText(excludePath, "");
-                    }
+                if (!File.Exists("Config.txt"))
+                {
+                    Console.WriteLine("Config.txtが見つかりませんでした");
+                    Console.ReadKey();
+                    return;
+                }
 
-                    using (StreamWriter writer = new(outputPath))
-                    {
-                        writer.WriteLine("【World Leaders Tournament】");
-                        writer.WriteLine($"Initial Seed：0x{Seed:X8}");
-                        writer.WriteLine("");
+                List<string> ExcludeList = new();
 
-                        for (uint count = 1; count < 622; count++)
+                if (File.Exists(excludePath))
+                {
+                    ExcludeList = File.ReadAllLines(excludePath)
+                        .Select(line => line.Trim())
+                        .Where(line => !string.IsNullOrWhiteSpace(line))
+                        .ToList();
+                }
+                else
+                {
+                    Console.WriteLine("出禁リスト.txtが見つかりませんでした");
+                    Console.ReadKey();
+                    return;
+                }
+
+                if(Offset > 622) Offset = 622;
+                int Flag = 0;
+
+                using (StreamWriter writer = new(outputPath))
+                {
+                    writer.WriteLine("【World Leaders Tournament】");
+                    Console.WriteLine("[年, 月, 秒, 時, 分, 秒, VCount, Timer0, 初期SEED]\n");
+                    writer.WriteLine("[年, 月, 秒, 時, 分, 秒, VCount, Timer0, 初期SEED]\n");
+
+                    for (int n = 0; n < PID.Count; n++)     //初期SEED
+                    {
+                        InSeedData SeedData = PID.GenSeed();
+                        ulong Seed = SeedData.Seed;
+                        ulong Temp = Seed;
+
+                        for (ulong count = 1; count < PID.Offset; count++)      //MT
                         {
+                            if (CountFlag == 100)
+                            {
+                                Console.ReadKey();
+                                return;
+                            }
+
                             var PWT = new PWTSeed(Seed, count);
                             ulong PWTSeed = PWT.PWTRNG();
 
@@ -159,14 +182,14 @@ namespace PWT_RNG
                             }
 
                             //-----------------------------------------
-                            uint maxY = (count - 1) / 7;
-                            uint x = 0;
-                            uint y = 0;
+                            ulong maxY = (count - 1) / 7;
+                            ulong x = 0;
+                            ulong y = 0;
                             bool found = false;
 
-                            for (uint yTry = maxY; yTry <= maxY; yTry--)
+                            for (ulong yTry = maxY; yTry <= maxY; yTry--)
                             {
-                                uint remaining = (count - 1) - 7 * yTry;
+                                ulong remaining = (count - 1) - 7 * yTry;
                                 if (remaining % 2 == 0)
                                 {
                                     x = remaining / 2;
@@ -180,8 +203,6 @@ namespace PWT_RNG
 
                             bool hasNoExcluded = JoinedTrainer.All(name => !ExcludeList.Contains(name));
 
-
-
                             string PadDisplay(string s, int padWidth)
                             {
                                 int width = s.Sum(c => (c <= 0x7F ? 1 : 2));
@@ -190,10 +211,21 @@ namespace PWT_RNG
 
                             if (hasNoExcluded)
                             {
-                                Console.WriteLine("");
-                                if (found) { Console.WriteLine($"Offset：{(count - 1)}, 受付：{x}, ボックス：{y}"); }
-                                else { Console.WriteLine($"Offset：{(count - 1)}"); }
+                                Console.WriteLine($"{SeedData.Year}, {SeedData.Month}, {SeedData.Day}, {SeedData.Hour}, {SeedData.Minute}, {SeedData.Second}, 0x{SeedData.VCount:X2}, 0x{SeedData.Timer0:X4}, 0x{SeedData.Seed:X16}");
+                                writer.WriteLine($"{SeedData.Year}, {SeedData.Month}, {SeedData.Day}, {SeedData.Hour}, {SeedData.Minute}, {SeedData.Second}, 0x{SeedData.VCount:X2}, 0x{SeedData.Timer0:X4}, 0x{SeedData.Seed:X16}");
+
+                                if (found)
+                                {
+                                    Console.WriteLine($"Offset：{(count - 1)}, 受付：{x}, ボックス：{y}");
+                                    writer.WriteLine($"Offset：{(count - 1)}, 受付：{x}, ボックス：{y}");
+                                }
+                                else 
+                                {
+                                    Console.WriteLine($"Offset：{(count - 1)}");
+                                    writer.WriteLine($"Offset：{(count - 1)}");
+                                }
                                 Console.WriteLine($"PWTRNG：0x{PWTSeed:X16}");
+                                writer.WriteLine($"PWTRNG：0x{PWTSeed:X16}");
 
                                 for (int i = 0; i < 4; i++)
                                 {
@@ -201,25 +233,17 @@ namespace PWT_RNG
                                     string half2 = PadDisplay(WorldLeaders[i + 4], 10);
 
                                     Console.WriteLine($"    {half1}{half2}");
+                                    writer.WriteLine($"    {half1}{half2}");
                                 }
+                                Flag += 1;
+
+                                Console.WriteLine("");
+                                writer.WriteLine("");
                             }
-
-                            if (found) { writer.WriteLine($"Offset：{(count - 1)}, 受付：{x}, ボックス：{y}"); }
-                            else { writer.WriteLine($"Offset：{(count - 1)}"); }
-                            writer.WriteLine($"PWTRNG：0x{PWTSeed:X16}");
-
-                            for (int i = 0; i < 4; i++)
-                            {
-                                string half1 = PadDisplay(WorldLeaders[i], 10);
-                                string half2 = PadDisplay(WorldLeaders[i + 4], 10);
-
-                                writer.WriteLine($"    {half1}{half2}");
-                            }
-
-                            writer.WriteLine("");
+                            if (CountFlag > 0 && CountFlag == Flag) return;
                         }
-                        Console.WriteLine("======================================");
                     }
+                    Console.WriteLine("======================================");
                 }
 
             }while (Console.ReadKey().Key == ConsoleKey.R);
