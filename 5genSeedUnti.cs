@@ -181,7 +181,6 @@ namespace PWT_RNG
             };
 
             BaseDt = BaseDt.Add(increment);
-
             return SeedData;
         }
 
